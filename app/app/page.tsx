@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef } from "react";
 import { Camera, Upload, Sparkles, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +9,7 @@ import { CameraCapture } from "@/components/CameraCapture";
 import { IngredientAnalysis } from "@/components/IngredientAnalysis";
 import { RecipeResults } from "@/components/RecipeResults";
 
-const Index = () => {
+export default function HomePage() {
   const [imageData, setImageData] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -35,7 +37,7 @@ const Index = () => {
 
   const analyzeImage = () => {
     if (!imageData) return;
-    
+
     setIsAnalyzing(true);
     // Simulate AI analysis for now - will be replaced with actual AI
     setTimeout(() => {
@@ -80,7 +82,7 @@ const Index = () => {
               <div className="w-24 h-24 mx-auto bg-gradient-primary rounded-full flex items-center justify-center">
                 <Camera className="h-12 w-12 text-white" />
               </div>
-              
+
               <div>
                 <h2 className="text-2xl font-semibold mb-2">Start Cooking!</h2>
                 <p className="text-muted-foreground">
@@ -90,7 +92,7 @@ const Index = () => {
 
               <div className="space-y-3">
                 <CameraCapture onCapture={handleImageCapture} />
-                
+
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-border"></div>
                   <span className="text-muted-foreground text-sm">or</span>
@@ -105,7 +107,7 @@ const Index = () => {
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Image
                 </Button>
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -131,12 +133,12 @@ const Index = () => {
                       className="w-full h-64 object-cover"
                     />
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button onClick={resetApp} variant="outline" className="flex-1">
                       Take New Photo
                     </Button>
-                    
+
                     {!isAnalyzing && !showResults && (
                       <Button
                         onClick={analyzeImage}
@@ -152,7 +154,7 @@ const Index = () => {
                 {/* Analysis Results */}
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold">AI Analysis</h3>
-                  
+
                   <IngredientAnalysis
                     isAnalyzing={isAnalyzing}
                     ingredients={ingredients}
@@ -169,6 +171,4 @@ const Index = () => {
       </div>
     </div>
   );
-};
-
-export default Index;
+}

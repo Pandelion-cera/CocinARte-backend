@@ -23,7 +23,7 @@ public class LocalizacionEntity {
     @Column(name = "longitud")
     private double longitud;
     @Basic
-    @Column(name = "nombre")
+    @Column(name = "direccion")
     private String direccion;
 
     @ManyToOne
