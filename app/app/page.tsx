@@ -35,21 +35,49 @@ export default function HomePage() {
     }
   };
 
-  const analyzeImage = () => {
+  const analyzeImage = async () => {
     if (!imageData) return;
 
+    // Prompt user for food name
+    const foodName = window.prompt("What food is in your photo? (e.g., 'pizza', 'pasta', 'salad')");
+
+    if (!foodName) return;
+
     setIsAnalyzing(true);
-    // Simulate AI analysis for now - will be replaced with actual AI
-    setTimeout(() => {
-      const mockIngredients = ["tomatoes", "onions", "garlic", "basil", "olive oil"];
-      setIngredients(mockIngredients);
+
+    try {
+      const response = await fetch('/api/analyze-ingredients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ foodName }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze ingredients');
+      }
+
+      const data = await response.json();
+
+      setIngredients(data.ingredients);
       setIsAnalyzing(false);
       setShowResults(true);
+
       toast({
         title: "Ingredients detected!",
-        description: `Found ${mockIngredients.length} ingredients in your photo.`,
+        description: `Found ${data.ingredients.length} ingredients for ${foodName}.`,
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error analyzing ingredients:', error);
+      setIsAnalyzing(false);
+
+      toast({
+        title: "Error",
+        description: "Failed to analyze ingredients. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetApp = () => {
