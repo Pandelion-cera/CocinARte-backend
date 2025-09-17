@@ -1,0 +1,16 @@
+{
+  "name": "Food-101 Recognition System",
+  "description": "CNN model for recognizing 101 food categories from Food-101 dataset",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "output_shape": [
+    101
+  ],
+  "num_classes": 101,
+  "preprocessing": "Resize to 224x224, normalize to [0,1]",
+  "dataset": "Food-101 compatible",
+  "categories_included": "101 international food dishes"
+}

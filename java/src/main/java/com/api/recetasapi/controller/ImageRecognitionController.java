@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,6 +60,35 @@ public class ImageRecognitionController {
         }
     }
 
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, Object>> recognizeUploadedImage(@RequestParam("image") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "No image file provided");
+                errorResponse.put("status", "error");
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            }
+
+            // Check if file is an image
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "File must be an image");
+                errorResponse.put("status", "error");
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            }
+
+            Map<String, Object> prediction = tensorFlowService.predictImage(file);
+            return new ResponseEntity<>(prediction, HttpStatus.OK);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to process uploaded image: " + e.getMessage());
+            errorResponse.put("status", "error");
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/model-info")
     public ResponseEntity<Map<String, Object>> getModelInfo() {
         Map<String, Object> response = new HashMap<>();
@@ -70,6 +100,7 @@ public class ImageRecognitionController {
             "/api/recognize/test",
             "/api/recognize/image?imagePath=<path>",
             "/api/recognize/predict-test",
+            "/api/recognize/upload",
             "/api/recognize/model-info"
         });
         return new ResponseEntity<>(response, HttpStatus.OK);

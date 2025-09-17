@@ -38,43 +38,63 @@ export default function HomePage() {
   const analyzeImage = async () => {
     if (!imageData) return;
 
-    // Prompt user for food name
-    const foodName = window.prompt("What food is in your photo? (e.g., 'pizza', 'pasta', 'salad')");
-
-    if (!foodName) return;
-
     setIsAnalyzing(true);
 
     try {
-      const response = await fetch('/api/analyze-ingredients', {
+      // Step 1: Convert base64 image to blob and send to Java for food recognition
+      const base64Response = await fetch(imageData);
+      const blob = await base64Response.blob();
+
+      const formData = new FormData();
+      formData.append('image', blob, 'image.jpg');
+
+      const recognitionResponse = await fetch('/api/recognize-food', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!recognitionResponse.ok) {
+        throw new Error('Failed to recognize food in image');
+      }
+
+      const recognitionData = await recognitionResponse.json();
+      const detectedFood = recognitionData.detectedFood;
+
+      toast({
+        title: "Food detected!",
+        description: `Detected: ${detectedFood}`,
+      });
+
+      // Step 2: Get ingredients for the detected food using OpenAI
+      const ingredientsResponse = await fetch('/api/analyze-ingredients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ foodName }),
+        body: JSON.stringify({ foodName: detectedFood }),
       });
 
-      if (!response.ok) {
+      if (!ingredientsResponse.ok) {
         throw new Error('Failed to analyze ingredients');
       }
 
-      const data = await response.json();
+      const ingredientsData = await ingredientsResponse.json();
 
-      setIngredients(data.ingredients);
+      setIngredients(ingredientsData.ingredients);
       setIsAnalyzing(false);
       setShowResults(true);
 
       toast({
-        title: "Ingredients detected!",
-        description: `Found ${data.ingredients.length} ingredients for ${foodName}.`,
+        title: "Ingredients analyzed!",
+        description: `Found ${ingredientsData.ingredients.length} ingredients for ${detectedFood}.`,
       });
     } catch (error) {
-      console.error('Error analyzing ingredients:', error);
+      console.error('Error in analysis process:', error);
       setIsAnalyzing(false);
 
       toast({
         title: "Error",
-        description: "Failed to analyze ingredients. Please try again.",
+        description: "Failed to analyze image. Please try again.",
         variant: "destructive",
       });
     }
