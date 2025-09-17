@@ -1,13 +1,11 @@
 package com.api.recetasapi.entities;
 
-import com.api.recetasapi.model.Receta;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @Table(name = "recetas", schema = "cookbook_db", catalog = "")
@@ -51,6 +49,14 @@ public class RecetasEntity {
     @Basic
     @Column(name = "verificacion")
     private Byte verificacion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "origen")
+    private Pais origen;
+
+    @Basic
+    @Column(name = "publico")
+    private Boolean publico;
 
 
     public Date getFechaCarga() {
@@ -141,6 +147,22 @@ public class RecetasEntity {
         this.verificacion = verificacion;
     }
 
+    public Pais getOrigen() {
+        return origen;
+    }
+
+    public void setOrigen(Pais origen) {
+        this.origen = origen;
+    }
+
+    public Boolean getPublico() {
+        return publico;
+    }
+
+    public void setPublico(Boolean publico) {
+        this.publico = publico;
+    }
+
     public UsuariosEntity getUsuarioCreador() { return usuarioCreador; }
 
     public void setUsuarioCreador(UsuariosEntity usuarioCreador) {
@@ -195,12 +217,12 @@ public class RecetasEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RecetasEntity that = (RecetasEntity) o;
-        return idReceta == that.idReceta && Objects.equals(usuarioCreador, that.usuarioCreador) && Objects.equals(nombre, that.nombre) && Objects.equals(descripcion, that.descripcion) && Objects.equals(foto, that.foto) && Objects.equals(porciones, that.porciones) && Objects.equals(cantidadPersonas, that.cantidadPersonas) && Objects.equals(tipoReceta, that.tipoReceta) && Objects.equals(verificacion, that.verificacion);
+        return idReceta == that.idReceta && Objects.equals(usuarioCreador, that.usuarioCreador) && Objects.equals(nombre, that.nombre) && Objects.equals(descripcion, that.descripcion) && Objects.equals(foto, that.foto) && Objects.equals(porciones, that.porciones) && Objects.equals(cantidadPersonas, that.cantidadPersonas) && Objects.equals(tipoReceta, that.tipoReceta) && Objects.equals(verificacion, that.verificacion) && origen == that.origen && Objects.equals(publico, that.publico);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idReceta, usuarioCreador, nombre, descripcion, foto, porciones, cantidadPersonas, tipoReceta, verificacion);
+        return Objects.hash(idReceta, usuarioCreador, nombre, descripcion, foto, porciones, cantidadPersonas, tipoReceta, verificacion, origen, publico);
     }
 
 }

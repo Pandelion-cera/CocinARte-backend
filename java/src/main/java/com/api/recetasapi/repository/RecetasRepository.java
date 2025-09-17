@@ -1,19 +1,21 @@
 package com.api.recetasapi.repository;
 
 import com.api.recetasapi.entities.IngredientesEntity;
+import com.api.recetasapi.entities.Pais;
 import com.api.recetasapi.entities.RecetasEntity;
 import com.api.recetasapi.entities.TiposEntity;
 import com.api.recetasapi.entities.UsuariosEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
 
 @Repository
 public interface RecetasRepository extends JpaRepository<RecetasEntity, Integer> {
     @Query("FROM RecetasEntity u WHERE u.idReceta = :idReceta")
-    RecetasEntity getById(Integer idReceta);
+    @NonNull RecetasEntity getById(@NonNull Integer idReceta);
 
     @Query("FROM RecetasEntity u WHERE u.verificacion = 1 ORDER BY u.nombre ASC")
     List<RecetasEntity> findVerificadas();
@@ -44,4 +46,7 @@ public interface RecetasRepository extends JpaRepository<RecetasEntity, Integer>
 
     @Query("FROM RecetasEntity u WHERE u.verificacion = 1 ORDER BY u.usuarioCreador.idUsuario, u.nombre ASC")
     List<RecetasEntity> findVerificadasOrderByUsuario();
+
+    @Query("FROM RecetasEntity r WHERE r.origen = :origen")
+    List<RecetasEntity> findByOrigen(Pais origen);
 }
