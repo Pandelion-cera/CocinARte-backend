@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     javaFormData.append('image', imageFile);
 
     // Send to Java backend
-    const javaResponse = await fetch('http://localhost:8080/api/recognize/upload', {
+    const javaBackendUrl = process.env.JAVA_BACKEND_URL || 'http://localhost:8080';
+    const javaResponse = await fetch(`${javaBackendUrl}/api/recognize/upload`, {
       method: 'POST',
       body: javaFormData,
     });
