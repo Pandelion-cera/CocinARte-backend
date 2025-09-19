@@ -35,8 +35,8 @@ public class TensorFlowService {
     private SavedModelBundle model;
     private Session session;
     private final String MODEL_PATH = "food101_model/saved_model";
-    private final int IMG_HEIGHT = 224;
-    private final int IMG_WIDTH = 224;
+    private final int IMG_HEIGHT = 160;
+    private final int IMG_WIDTH = 160;
     private final int IMG_CHANNELS = 3;
     private Map<String, String> foodClassMapping;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -347,14 +347,15 @@ public class TensorFlowService {
             // Preprocess image for TensorFlow
             FloatNdArray inputTensor = preprocessImageForTensorFlow(image);
 
-            // Run inference using simplified approach
+            // Run inference using session approach with correct tensor names
             try (TFloat32 input = TFloat32.tensorOf(inputTensor)) {
 
                 System.out.println("🧠 Running TensorFlow inference...");
+                // Use serving_default signature with correct approach
                 var tensorResult = session.runner()
-                       .feed("serve_keras_tensor", input)
-                       .fetch("StatefulPartitionedCall:0")
-                       .run();
+                    .feed("serving_default_input_layer:0", input)
+                    .fetch("StatefulPartitionedCall_1:0")
+                    .run();
 
                 // Process output - improved version with debugging
                 var outputTensor = tensorResult.get(0);
@@ -487,7 +488,7 @@ public class TensorFlowService {
     }
 
     private FloatNdArray preprocessImageForTensorFlow(BufferedImage image) {
-        // Resize to 224x224
+        // Resize to 160x160
         BufferedImage resized = new BufferedImage(IMG_WIDTH, IMG_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = resized.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
