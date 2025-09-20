@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     javaFormData.append('image', imageFile);
 
     // Send to Java backend
-    const javaBackendUrl = process.env.JAVA_BACKEND_URL || 'http://localhost:8080';
+    const javaBackendUrl = process.env.JAVA_BACKEND_URL || 'http://cocina-Publi-dRJVfjGAbpfZ-2110027558.us-east-1.elb.amazonaws.com';
     const javaResponse = await fetch(`${javaBackendUrl}/api/recognize/upload`, {
       method: 'POST',
       body: javaFormData,
