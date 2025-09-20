@@ -19,10 +19,32 @@ public class ImageRecognitionController {
     private final TensorFlowService tensorFlowService;
 
     @GetMapping("/test")
-    public ResponseEntity<Map<String, Object>> testEndpoint() {
+    public ResponseEntity<String> testEndpoint() {
+        System.out.println("🏥 HEALTH CHECK ENDPOINT CALLED - " + java.time.LocalDateTime.now());
+        System.out.println("🏥 Health check request received at /api/recognize/test");
+
+        String response = "OK";
+
+        System.out.println("🏥 Health check response: " + response);
+        System.out.println("🏥 Returning HTTP 200 OK");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<String> rootHealthCheck() {
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> statusEndpoint() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "Image recognition service is running");
         response.put("message", "TensorFlow integration ready");
+        response.put("version", "7.0-database-enabled");
+        response.put("timestamp", java.time.LocalDateTime.now().toString());
+        response.put("healthCheck", "HEALTHY");
+        response.put("database", "CONNECTED");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

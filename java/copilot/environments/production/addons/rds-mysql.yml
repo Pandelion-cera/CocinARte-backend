@@ -1,0 +1,150 @@
+# This is an addon template for Amazon RDS MySQL
+# You can learn more about addons at: https://aws.github.io/copilot-cli/docs/developing/addons/
+
+Parameters:
+  App:
+    Type: String
+    Description: Your application's name.
+  Env:
+    Type: String
+    Description: The name of the environment being deployed.
+
+Resources:
+  # Create a subnet group for the RDS instance
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for CocinARte RDS MySQL
+      SubnetIds:
+        - Fn::Select:
+          - 0
+          - Fn::GetAtt: [VPCStack, Outputs.PrivateSubnetIDs]
+        - Fn::Select:
+          - 1
+          - Fn::GetAtt: [VPCStack, Outputs.PrivateSubnetIDs]
+      Tags:
+        - Key: Name
+          Value: !Sub ${App}-${Env}-rds-subnet-group
+
+  # Security group for RDS
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for CocinARte RDS MySQL
+      VpcId:
+        Fn::GetAtt: [VPCStack, Outputs.VPC]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId:
+            Fn::GetAtt: [VPCStack, Outputs.EnvironmentSecurityGroup]
+      Tags:
+        - Key: Name
+          Value: !Sub ${App}-${Env}-rds-security-group
+
+  # Random password for database
+  DBPassword:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Password for CocinARte MySQL database
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+
+  # RDS MySQL instance (Free Tier optimized)
+  CocinARteDB:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete # Delete to avoid charges when not needed
+    Properties:
+      DBInstanceIdentifier: !Sub ${App}-${Env}-mysql
+      DBName: cocinarte
+      DBInstanceClass: db.t3.micro # Free tier eligible
+      Engine: mysql
+      EngineVersion: 8.0.35
+      MasterUsername: admin
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DBPassword}:SecretString:password}}'
+      AllocatedStorage: 20 # Free tier includes 20 GB
+      StorageType: gp2 # General Purpose SSD (free tier)
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 0 # Disable automated backups to save costs
+      MultiAZ: false # Single AZ to minimize costs
+      PubliclyAccessible: false
+      StorageEncrypted: false # Disable encryption to stay in free tier
+      DeleteAutomatedBackups: true
+      DeletionProtection: false # Allow easy deletion
+      MonitoringInterval: 0 # Disable enhanced monitoring
+      PerformanceInsightsEnabled: false # Disable Performance Insights
+      Tags:
+        - Key: Name
+          Value: !Sub ${App}-${Env}-mysql
+        - Key: Environment
+          Value: MVP
+
+  # Store database connection details in SSM Parameter Store
+  DBEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/DB_ENDPOINT
+      Type: String
+      Value: !GetAtt CocinARteDB.Endpoint.Address
+
+  DBPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/DB_PORT
+      Type: String
+      Value: !GetAtt CocinARteDB.Endpoint.Port
+
+  DBNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/DB_NAME
+      Type: String
+      Value: cocinarte
+
+  DBUsernameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/DB_USERNAME
+      Type: String
+      Value: admin
+
+  DBPasswordParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/DB_PASSWORD
+      Type: SecureString
+      Value: !Sub '{{resolve:secretsmanager:${DBPassword}:SecretString:password}}'
+
+  # Mail configuration parameters (to be filled manually)
+  MailUsernameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/MAIL_USERNAME
+      Type: String
+      Value: cocinarte.customerservice@gmail.com
+
+  MailPasswordParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /copilot/${App}/${Env}/secrets/MAIL_PASSWORD
+      Type: SecureString
+      Value: cocina123 # Change this to your actual mail password
+
+Outputs:
+  DBEndpoint:
+    Description: MySQL database endpoint
+    Value: !GetAtt CocinARteDB.Endpoint.Address
+
+  DBPort:
+    Description: MySQL database port
+    Value: !GetAtt CocinARteDB.Endpoint.Port
+
+  DBName:
+    Description: Database name
+    Value: cocinarte

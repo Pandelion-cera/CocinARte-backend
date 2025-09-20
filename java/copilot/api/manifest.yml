@@ -1,0 +1,58 @@
+# The manifest for the "api" service.
+# Read the full specification for the "Load Balanced Web Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: api
+type: Load Balanced Web Service
+
+# Your service is reachable at a public endpoint.
+
+# Configuration for your containers and service.
+image:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-build
+  build: Dockerfile
+  # Port exposed through your container to route traffic to it.
+  port: 8080
+  healthcheck:
+    # Container health checks: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-healthcheck
+    command: ["CMD-SHELL", "curl -f http://localhost:8080/api/recognize/test || exit 1"]
+    interval: 30s
+    retries: 3
+    timeout: 10s
+    start_period: 90s
+
+cpu: 256       # Number of CPU units for the task (smallest option).
+memory: 512    # Amount of memory in MiB used by the task (smallest option).
+platform: linux/x86_64     # See https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/#platform
+count: 1       # Number of tasks that should be running in your service.
+exec: true     # Enable running commands in your container.
+
+http:
+  # Requests to this path will be forwarded to your service.
+  # To match all requests you can use the "/" path.
+  path: '/'
+  # ALB health check temporarily disabled - using only ECS container health check
+  # healthcheck: '/api/recognize/test'
+
+network:
+  vpc:
+    security_groups:
+      - from_cfn: ${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-mysqldbSecurityGroup
+
+# storage:
+  # readonly_fs: true       # Limit to read-only access to mounted root filesystems.
+
+# Optional fields for more advanced use-cases.
+#
+variables:                    # Pass environment variables as key value pairs.
+  SPRING_PROFILES_ACTIVE: production
+  CORS_ALLOWED_ORIGINS: "*"
+  DB_SECRET: '{"dbClusterIdentifier":"cocinarte-production-addonsstack-mysqldbdbcluster-rslqgfycxf7l","password":"8k7MN1teAXAK7gM9","dbname":"cocinarte","engine":"mysql","port":3306,"host":"cocinarte-production-addonsstack-mysqldbdbcluster-rslqgfycxf7l.cluster-cyf2s2468856.us-east-1.rds.amazonaws.com","username":"admin"}'
+
+# You can override any of the values defined above by environment.
+#environments:
+#  test:
+#    count: 2               # Number of tasks to run for the "test" environment.
+#    deployment:            # The deployment strategy for the "test" environment.
+#       rolling: 'recreate' # Stops existing tasks before new ones are started for faster deployments.

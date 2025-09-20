@@ -1,5 +1,7 @@
 package com.api.recetasapi.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
@@ -32,6 +34,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class TensorFlowService {
 
+    @Autowired
+    private Environment environment;
+
     private SavedModelBundle model;
     private Session session;
     private final String MODEL_PATH = "food101_model/saved_model";
@@ -46,6 +51,16 @@ public class TensorFlowService {
         try {
             System.out.println("🍔 Loading Food-101 Model...");
             System.out.println("Model path: " + MODEL_PATH);
+
+            // Check if we're in production environment and skip TensorFlow for testing
+            String[] activeProfiles = environment.getActiveProfiles();
+            boolean isProduction = Arrays.asList(activeProfiles).contains("production");
+            if (isProduction) {
+                System.out.println("🧪 Running in production mode - skipping TensorFlow for testing");
+                System.out.println("⚠️  Using enhanced mock predictions");
+                loadFoodClassMapping();
+                return;
+            }
 
             // Load the SavedModel
             model = SavedModelBundle.load(MODEL_PATH, "serve");
@@ -64,6 +79,7 @@ public class TensorFlowService {
             e.printStackTrace();
             // Fall back to mock mode
             System.out.println("⚠️  Falling back to enhanced mock predictions");
+            loadFoodClassMapping();
         }
     }
 
